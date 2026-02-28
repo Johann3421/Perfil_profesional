@@ -17,25 +17,6 @@ services:
       - NODE_ENV=production
     expose:
       - "3000"
-    labels:
-      - "traefik.enable=true"
-      # ── HTTPS router ────────────────────────────────────────────────────────
-      - "traefik.http.routers.portfolio-https.rule=Host(`${DOMAIN:-perfil.abadgroup.tech}`)"
-      - "traefik.http.routers.portfolio-https.entrypoints=websecure"
-      - "traefik.http.routers.portfolio-https.tls=true"
-      - "traefik.http.routers.portfolio-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.portfolio-https.service=portfolio-app"
-      # ── HTTP router → redirect to HTTPS ─────────────────────────────────────
-      - "traefik.http.routers.portfolio-http.rule=Host(`${DOMAIN:-perfil.abadgroup.tech}`)"
-      - "traefik.http.routers.portfolio-http.entrypoints=web"
-      - "traefik.http.routers.portfolio-http.middlewares=redirect-to-https"
-      # ── Middleware ───────────────────────────────────────────────────────────
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      # ── Service: tell Traefik which port the app listens on ──────────────────
-      - "traefik.http.services.portfolio-app.loadbalancer.server.port=3000"
-      # ── Network Traefik should use to reach the container ────────────────────
-      - "traefik.docker.network=dokploy-network"
     restart: unless-stopped
     networks:
       - portfolio_net
