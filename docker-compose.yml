@@ -17,6 +17,24 @@ services:
       - NODE_ENV=production
     expose:
       - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      # Service
+      - "traefik.http.services.portfolio-app.loadbalancer.server.port=3000"
+      - "traefik.http.services.portfolio-app.loadbalancer.server.scheme=http"
+      # HTTPS router
+      - "traefik.http.routers.portfolio-secure.rule=Host(`perfil.abadgroup.tech`)"
+      - "traefik.http.routers.portfolio-secure.entrypoints=websecure"
+      - "traefik.http.routers.portfolio-secure.tls=true"
+      - "traefik.http.routers.portfolio-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.portfolio-secure.service=portfolio-app"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.portfolio-http.rule=Host(`perfil.abadgroup.tech`)"
+      - "traefik.http.routers.portfolio-http.entrypoints=web"
+      - "traefik.http.routers.portfolio-http.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
     restart: unless-stopped
     networks:
       - portfolio_net
