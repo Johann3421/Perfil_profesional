@@ -1,6 +1,16 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily instantiate Resend to avoid throwing during build when the
+// RESEND_API_KEY is not available in the build environment.
+let _resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  if (_resend) return _resend;
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  _resend = new Resend(key);
+  return _resend;
+}
 
 interface ContactEmailData {
   nombre: string;
@@ -90,17 +100,31 @@ export async function sendContactEmail(data: ContactEmailData) {
 </html>
   `.trim();
 
-  const { data: result, error } = await resend.emails.send({
-    from,
-    to: [to],
-    replyTo: data.email,
-    subject,
-    html,
-  });
+  const client = getResendClient();
 
-  if (error) {
-    throw new Error(`Error enviando email: ${error.message}`);
+  if (!client) {
+    // If there's no API key available (e.g. during build), skip sending
+    // the email but keep the system functional. The API route saves the
+    // message to the database regardless, so we don't fail the request.
+    console.warn("RESEND_API_KEY no está configurada — se omite el envío de email");
+    return { skipped: true } as any;
   }
 
-  return result;
+  try {
+    const { data: result, error } = await client.emails.send({
+      from,
+      to: [to],
+      replyTo: data.email,
+      subject,
+      html,
+    });
+
+    if (error) {
+      throw new Error(`Error enviando email: ${error.message}`);
+    }
+
+    return result;
+  } catch (err) {
+    throw err;
+  }
 }
