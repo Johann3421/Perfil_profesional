@@ -143,6 +143,20 @@ El sitio estará disponible en `http://localhost:3000`.
 | `docker compose up` | Levantar toda la infraestructura (app + DB) |
 | `docker compose up db -d` | Solo levantar la DB en background |
 
+### Modo local (override para publicar puerto)
+
+Para desarrollo local y exponer la app en `http://localhost:3000` usa el archivo override que publica el puerto del host. Esto no se usa en producción.
+
+```bash
+# copia las variables de ejemplo (si no lo hiciste)
+cp .env.example .env.local
+# (opcional) edita .env.local para ajustar HOST_PORT
+# Arrancar (usa override que publica el puerto):
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+```
+
+En producción (Dokploy) `docker-compose.yml` NO publica puertos en el host para evitar conflictos de bind; la plataforma debe encaminar el tráfico externo al contenedor.
+
 ---
 
 ## 4. Troubleshooting
