@@ -46,9 +46,10 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # Copy Prisma files for migrations at startup
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Copy full node_modules so runtime binaries (e.g. prisma CLI) are available
+# This increases image size slightly but ensures `npx prisma migrate deploy` works
+COPY --from=builder /app/node_modules ./node_modules
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
